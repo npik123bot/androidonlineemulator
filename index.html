@@ -2,28 +2,14 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Student Portal - Research Dashboard</title>
+  <title>Library Workspace - Module 4</title>
   <style>
-    body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: sans-serif; }
-    .nav { background: #222; padding: 10px; display: flex; gap: 10px; }
-    button { padding: 10px; cursor: pointer; background: #444; color: white; border: none; border-radius: 5px; }
-    iframe { width: 100%; height: calc(100% - 50px); border: none; }
+    body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #fff; }
+    iframe { width: 100%; height: 100%; border: none; }
   </style>
 </head>
 <body>
-  <div class="nav">
-    <button onclick="load('/runapk/create-androidapk.html?app=android_6.0_blank')">Launch Android</button>
-    <button onclick="load('/appdirect/filemanager.html')">My Files</button>
-  </div>
-  <iframe id="main-frame" src="about:blank" sandbox="allow-forms allow-scripts allow-same-origin allow-popups"></iframe>
-
-  <script>
-    function load(path) {
-      // This keeps the request on YOUR Deno domain
-      document.getElementById('main-frame').src = window.location.origin + path;
-    }
-    // Auto-start
-    window.onload = () => load('/runapk/create-androidapk.html?app=android_6.0_blank');
-  </script>
+  <iframe id="frame" src="/runapk/create-androidapk.html?app=android_6.0_blank" 
+          sandbox="allow-forms allow-scripts allow-same-origin allow-popups"></iframe>
 </body>
 </html>
