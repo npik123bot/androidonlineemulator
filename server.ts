@@ -1,39 +1,51 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 
-const TARGET_DOMAIN = "https://www.apkonline.net";
+// Force a specific target domain
+const TARGET = "https://www.apkonline.net";
 
 serve(async (req) => {
   const url = new URL(req.url);
-  
-  // 1. Serve your HTML file first
+
+  // Serve the local index.html
   if (url.pathname === "/" || url.pathname === "/index.html") {
     try {
       const html = await Deno.readTextFile("./index.html");
       return new Response(html, { headers: { "content-type": "text/html" } });
-    } catch (e) {
-      return new Response("Error: index.html not found in GitHub repo.", { status: 404 });
+    } catch {
+      return new Response("Error: index.html missing.", { status: 404 });
     }
   }
 
-  // 2. Proxy all other requests to the emulator
-  const proxyUrl = new URL(url.pathname + url.search, TARGET_DOMAIN);
+  // 1. Manually resolve the DNS using Google's DNS server
+  // This bypasses the school's blocked DNS entries
+  let targetIp = "144.76.37.158"; // This is the last known IP for apkonline.net
   
+  try {
+    const dnsRecords = await Deno.resolveDns("www.apkonline.net", "A", {
+      nameServer: { ipAddr: "8.8.8.8", port: 53 },
+    });
+    if (dnsRecords.length > 0) targetIp = dnsRecords[0];
+  } catch (e) {
+    console.log("DNS Manual Resolve failed, using fallback IP.");
+  }
+
+  // 2. Build the new proxy URL using the IP to avoid another DNS lookup
+  const proxyUrl = new URL(url.pathname + url.search, `http://${targetIp}`);
+
   const headers = new Headers(req.headers);
-  headers.set("Host", "www.apkonline.net");
-  headers.delete("referer"); // Helps bypass some simple filter checks
+  headers.set("Host", "www.apkonline.net"); // This is required for the server to accept the IP
+  headers.delete("referer");
 
   try {
     const response = await fetch(proxyUrl.toString(), {
       method: req.method,
       headers: headers,
       body: req.body,
-      // Change to 'follow' to let Deno handle redirects automatically
-      redirect: "follow", 
+      redirect: "follow",
     });
 
     return response;
   } catch (err) {
-    console.error("Fetch error:", err);
-    return new Response(`Proxy Connection Failed: ${err.message}`, { status: 502 });
+    return new Response(`Final Proxy Error: ${err.message}. The school has likely blocked the IP address directly.`, { status: 502 });
   }
 });
