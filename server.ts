@@ -1,33 +1,39 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 
-// The numerical IP address for the emulator server (Bypasses DNS Blocks)
-const TARGET_IP = "http://144.76.37.158"; 
+const TARGET_DOMAIN = "https://www.apkonline.net";
 
 serve(async (req) => {
   const url = new URL(req.url);
   
+  // 1. Serve your HTML file first
   if (url.pathname === "/" || url.pathname === "/index.html") {
-    const html = await Deno.readTextFile("./index.html");
-    return new Response(html, { headers: { "content-type": "text/html" } });
+    try {
+      const html = await Deno.readTextFile("./index.html");
+      return new Response(html, { headers: { "content-type": "text/html" } });
+    } catch (e) {
+      return new Response("Error: index.html not found in GitHub repo.", { status: 404 });
+    }
   }
 
-  // Proxy the request using the IP directly
-  const proxyUrl = new URL(url.pathname + url.search, TARGET_IP);
-  const headers = new Headers(req.headers);
+  // 2. Proxy all other requests to the emulator
+  const proxyUrl = new URL(url.pathname + url.search, TARGET_DOMAIN);
   
-  // Mask the "Host" header so the target server doesn't reject us
+  const headers = new Headers(req.headers);
   headers.set("Host", "www.apkonline.net");
-  headers.delete("referer");
+  headers.delete("referer"); // Helps bypass some simple filter checks
 
   try {
     const response = await fetch(proxyUrl.toString(), {
       method: req.method,
       headers: headers,
       body: req.body,
-      redirect: "manual", // Stops the server from forcing a redirect to the blocked .net domain
+      // Change to 'follow' to let Deno handle redirects automatically
+      redirect: "follow", 
     });
+
     return response;
-  } catch (e) {
-    return new Response("System Update in Progress... Please wait.", { status: 500 });
+  } catch (err) {
+    console.error("Fetch error:", err);
+    return new Response(`Proxy Connection Failed: ${err.message}`, { status: 502 });
   }
 });
