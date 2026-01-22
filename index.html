@@ -1,76 +1,29 @@
 <!DOCTYPE HTML>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Digital Library - Student Resources</title>
+  <title>Student Portal - Research Dashboard</title>
   <style>
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: sans-serif;
-      background-color: #f4f4f4;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-    }
-    .nav-bar {
-      background: #333;
-      color: white;
-      padding: 10px;
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-    }
-    button {
-      background: #4CAF50;
-      color: white;
-      border: none;
-      padding: 8px 15px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-    button:hover { background: #45a049; }
-    .container {
-      flex-grow: 1;
-      width: 100%;
-      border: none;
-    }
-    iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
-    }
+    body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: sans-serif; }
+    .nav { background: #222; padding: 10px; display: flex; gap: 10px; }
+    button { padding: 10px; cursor: pointer; background: #444; color: white; border: none; border-radius: 5px; }
+    iframe { width: 100%; height: calc(100% - 50px); border: none; }
   </style>
 </head>
-
 <body>
-
-  <div class="nav-bar">
-    <button onclick="loadApp('https://www.apkonline.net/runapk/create-androidapk.html?app=android_6.0_blank')">Start Emulator</button>
-    <button onclick="loadApp('https://www.apkonline.net/appdirect/filemanager.html')">APK Manager</button>
+  <div class="nav">
+    <button onclick="load('/runapk/create-androidapk.html?app=android_6.0_blank')">Launch Android</button>
+    <button onclick="load('/appdirect/filemanager.html')">My Files</button>
   </div>
-
-  <div class="container">
-    <iframe 
-      id="emu-frame"
-      src="about:blank" 
-      sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-modals"
-      allow="geolocation; microphone; camera; clipboard-read; clipboard-write">
-    </iframe>
-  </div>
+  <iframe id="main-frame" src="about:blank" sandbox="allow-forms allow-scripts allow-same-origin allow-popups"></iframe>
 
   <script>
-    function loadApp(url) {
-      document.getElementById('emu-frame').src = url;
+    function load(path) {
+      // This keeps the request on YOUR Deno domain
+      document.getElementById('main-frame').src = window.location.origin + path;
     }
-    
-    // Auto-load the emulator on start
-    window.onload = function() {
-      loadApp('https://www.apkonline.net/runapk/create-androidapk.html?app=android_6.0_blank');
-    };
+    // Auto-start
+    window.onload = () => load('/runapk/create-androidapk.html?app=android_6.0_blank');
   </script>
-
 </body>
 </html>
