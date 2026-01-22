@@ -1,27 +1,22 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 
-// This is "https://www.apkonline.net" encoded in Base64
-const encodedTarget = "aHR0cHM6Ly93d3cuYXBrb25saW5lLm5ldA==";
-const TARGET_URL = atob(encodedTarget);
+// The numerical IP address for the emulator server (Bypasses DNS Blocks)
+const TARGET_IP = "http://144.76.37.158"; 
 
 serve(async (req) => {
   const url = new URL(req.url);
   
   if (url.pathname === "/" || url.pathname === "/index.html") {
-    try {
-      const html = await Deno.readTextFile("./index.html");
-      return new Response(html, { headers: { "content-type": "text/html" } });
-    } catch {
-      return new Response("Index file not found", { status: 404 });
-    }
+    const html = await Deno.readTextFile("./index.html");
+    return new Response(html, { headers: { "content-type": "text/html" } });
   }
 
-  // Rewrite the URL to the hidden target
-  const proxyUrl = new URL(url.pathname + url.search, TARGET_URL);
-  
+  // Proxy the request using the IP directly
+  const proxyUrl = new URL(url.pathname + url.search, TARGET_IP);
   const headers = new Headers(req.headers);
-  headers.set("Host", proxyUrl.hostname);
-  // Remove referrer to hide where the request is coming from
+  
+  // Mask the "Host" header so the target server doesn't reject us
+  headers.set("Host", "www.apkonline.net");
   headers.delete("referer");
 
   try {
@@ -29,17 +24,10 @@ serve(async (req) => {
       method: req.method,
       headers: headers,
       body: req.body,
-      redirect: "follow",
+      redirect: "manual", // Stops the server from forcing a redirect to the blocked .net domain
     });
-
-    // If we get a 403/Blocked response, it means the proxy is detected
-    if (response.status === 403) {
-      return new Response("Access Denied by Filter. Try a different Network.", { status: 403 });
-    }
-
     return response;
   } catch (e) {
-    // This is the error you saw in your screenshot
-    return new Response("Connection Error: The target site is blocked at the DNS level.", { status: 500 });
+    return new Response("System Update in Progress... Please wait.", { status: 500 });
   }
 });
